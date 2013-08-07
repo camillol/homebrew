@@ -1,10 +1,5 @@
 require 'formula'
 
-class PureDocs < Formula
-  url 'https://bitbucket.org/purelang/pure-lang/downloads/pure-docs-0.57.tar.gz'
-  sha1 '7f2c6051b831d3de887f2182e8b29b1716ab45fd'
-end
-
 class Pure < Formula
   homepage 'http://purelang.bitbucket.org/'
   url 'https://bitbucket.org/purelang/pure-lang/downloads/pure-0.57.tar.gz'
@@ -15,6 +10,11 @@ class Pure < Formula
   depends_on 'readline'
   depends_on 'mpfr'
 
+  resource 'docs' do
+    url 'https://bitbucket.org/purelang/pure-lang/downloads/pure-docs-0.57.tar.gz'
+    sha1 '7f2c6051b831d3de887f2182e8b29b1716ab45fd'
+  end
+
   def install
     system "./configure", "--disable-debug",
                           "--prefix=#{prefix}",
@@ -23,7 +23,6 @@ class Pure < Formula
     system "make"
     system "make check"
     system "make install"
-
-    PureDocs.new.brew { system "make", "prefix=#{prefix}", "install" }
+    resource('docs').stage { system "make", "prefix=#{prefix}", "install" }
   end
 end
