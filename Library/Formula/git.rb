@@ -1,15 +1,5 @@
 require 'formula'
 
-class GitManuals < Formula
-  url 'http://git-core.googlecode.com/files/git-manpages-1.8.3.4.tar.gz'
-  sha1 '04fe5a752234262d128220f09ea25c0faa447947'
-end
-
-class GitHtmldocs < Formula
-  url 'http://git-core.googlecode.com/files/git-htmldocs-1.8.3.4.tar.gz'
-  sha1 '1f1200515e1e7042bcbd4176ef76c58021cd9a83'
-end
-
 class Git < Formula
   homepage 'http://git-scm.com'
   url 'http://git-core.googlecode.com/files/git-1.8.3.4.tar.gz'
@@ -23,6 +13,16 @@ class Git < Formula
   depends_on :python
   depends_on 'pcre' => :optional
   depends_on 'gettext' => :optional
+
+  resource 'man' do
+    url 'http://git-core.googlecode.com/files/git-manpages-1.8.3.4.tar.gz'
+    sha1 '04fe5a752234262d128220f09ea25c0faa447947'
+  end
+
+  resource 'html' do
+    url 'http://git-core.googlecode.com/files/git-htmldocs-1.8.3.4.tar.gz'
+    sha1 '1f1200515e1e7042bcbd4176ef76c58021cd9a83'
+  end
 
   def install
     # If these things are installed, tell Git build system to not use them
@@ -82,8 +82,8 @@ class Git < Formula
 
     # We could build the manpages ourselves, but the build process depends
     # on many other packages, and is somewhat crazy, this way is easier.
-    GitManuals.new.brew { man.install Dir['*'] }
-    GitHtmldocs.new.brew { (share+'doc/git-doc').install Dir['*'] }
+    man.install resource('man')
+    (share+'doc/git-doc').install resource('html')
   end
 
   def caveats; <<-EOS.undent
