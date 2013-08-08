@@ -1,21 +1,10 @@
 require 'formula'
 
-class Setuptools < Formula
-  url 'https://pypi.python.org/packages/source/s/setuptools/setuptools-0.9.8.tar.gz'
-  sha1 'a13ad9411149c52501a15c702a4f3a3c757b5ba9'
-end
-
-class Pip < Formula
-  url 'https://pypi.python.org/packages/source/p/pip/pip-1.4.tar.gz'
-  sha1 '3149dc77c66b77d02497205fca5df56ae9d3e753'
-end
-
 class Python < Formula
   homepage 'http://www.python.org'
+  head 'http://hg.python.org/cpython', :using => :hg, :branch => '2.7'
   url 'http://www.python.org/ftp/python/2.7.5/Python-2.7.5.tar.bz2'
   sha1 '6cfada1a739544a6fa7f2601b500fba02229656b'
-
-  head 'http://hg.python.org/cpython', :using => :hg, :branch => '2.7'
 
   option :universal
   option 'quicktest', 'Run `make quicktest` after the build (for devs; may fail)'
@@ -32,6 +21,16 @@ class Python < Formula
   depends_on 'openssl' if build.with? 'brewed-openssl'
   depends_on 'homebrew/dupes/tcl-tk' if build.with? 'brewed-tk'
   depends_on :x11 if build.with? 'brewed-tk' and Tab.for_name('tcl-tk').used_options.include?('with-x11')
+
+  resource 'setuptools' do
+    url 'https://pypi.python.org/packages/source/s/setuptools/setuptools-0.9.8.tar.gz'
+    sha1 'a13ad9411149c52501a15c702a4f3a3c757b5ba9'
+  end
+
+  resource 'pip' do
+    url 'https://pypi.python.org/packages/source/p/pip/pip-1.4.tar.gz'
+    sha1 '3149dc77c66b77d02497205fca5df56ae9d3e753'
+  end
 
   def patches
     p = []
@@ -138,8 +137,9 @@ class Python < Formula
 
     setup_args = [ "-s", "setup.py", "--no-user-cfg", "install", "--force", "--verbose",
                    "--install-scripts=#{bin}", "--install-lib=#{site_packages}" ]
-    Setuptools.new.brew { system py.binary, *setup_args }
-    Pip.new.brew { system py.binary, *setup_args }
+
+    resource('setuptools').stage { system py.binary, *setup_args }
+    resource('pip').stage { system py.binary, *setup_args }
 
     # And now we write the distutils.cfg
     cfg = prefix/"Frameworks/Python.framework/Versions/2.7/lib/python2.7/distutils/distutils.cfg"
