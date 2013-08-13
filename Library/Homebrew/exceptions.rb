@@ -266,3 +266,13 @@ class DuplicateResourceError < ArgumentError
     "Resource \"#{@resource}\" defined more than once."
   end
 end
+
+class ResourceNameReservedError < ArgumentError
+  def initialize resource
+    @resource = resource
+  end
+
+  def to_s
+    "The resource name \"#{@resource}\" is reserved for internal use."
+  end
+end

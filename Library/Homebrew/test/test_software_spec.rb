@@ -24,7 +24,7 @@ class SoftwareSpecTests < Test::Unit::TestCase
     strategy = Class.new(AbstractDownloadStrategy)
     @spec.url('foo', :using => strategy)
     assert_equal 'foo', @spec.url
-    assert_equal strategy, @spec.download_strategy
+    assert_equal strategy, @spec.main_resource.download_strategy
   end
 
   def test_url_with_specs_and_download_strategy
@@ -32,13 +32,13 @@ class SoftwareSpecTests < Test::Unit::TestCase
     @spec.url('foo', :using => strategy, :branch => 'master')
     assert_equal 'foo', @spec.url
     assert_equal({ :branch => 'master' }, @spec.specs)
-    assert_equal strategy, @spec.download_strategy
+    assert_equal strategy, @spec.main_resource.download_strategy
   end
 
   def test_url_with_custom_download_strategy_symbol
     @spec.url('foo', :using => :git)
     assert_equal 'foo', @spec.url
-    assert_equal GitDownloadStrategy, @spec.download_strategy
+    assert_equal GitDownloadStrategy, @spec.main_resource.download_strategy
   end
 
   def test_version
@@ -73,11 +73,11 @@ class SoftwareSpecTests < Test::Unit::TestCase
   end
 
   def test_mirrors
-    assert_empty @spec.mirrors
+    assert_empty @spec.main_resource.mirrors
     @spec.mirror('foo')
     @spec.mirror('bar')
-    assert_equal 'foo', @spec.mirrors.shift
-    assert_equal 'bar', @spec.mirrors.shift
+    assert_equal 'foo', @spec.main_resource.mirrors.shift
+    assert_equal 'bar', @spec.main_resource.mirrors.shift
   end
 
   def test_checksum_setters
@@ -93,7 +93,7 @@ class SoftwareSpecTests < Test::Unit::TestCase
     DownloadStrategyDetector.
       expects(:detect).with("foo", nil).returns(strategy)
     @spec.url("foo")
-    assert_equal strategy, @spec.download_strategy
+    assert_equal strategy, @spec.main_resource.download_strategy
   end
 
   def test_verify_download_integrity_missing
@@ -104,7 +104,7 @@ class SoftwareSpecTests < Test::Unit::TestCase
       with(checksum).raises(ChecksumMissingError)
     fn.expects(:sha1)
 
-    shutup { @spec.verify_download_integrity(fn) }
+    shutup { @spec.main_resource.verify_download_integrity(fn) }
   end
 
   def test_verify_download_integrity_mismatch
@@ -116,7 +116,7 @@ class SoftwareSpecTests < Test::Unit::TestCase
 
     shutup do
       assert_raises(ChecksumMismatchError) do
-        @spec.verify_download_integrity(fn)
+        @spec.main_resource.verify_download_integrity(fn)
       end
     end
   end

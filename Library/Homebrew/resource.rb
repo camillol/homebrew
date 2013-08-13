@@ -11,15 +11,16 @@ class Resource
   # This is the resource name
   attr_reader :name
 
-  # This is the associated formula name
-  attr_reader :owner_name
+  attr_accessor :checksum, :url
+  attr_reader :specs, :using, :mirrors
 
-  attr_reader :checksum
-  attr_reader :specs, :using
+  attr_reader :downloader
 
-  def initialize name
+  def initialize name, url=nil, version=nil
     @name = name
-    @url = nil
+    @url = url
+    @version = version
+    @mirrors = []
     @specs = {}
     @checksum = nil
     @using = nil
@@ -27,10 +28,18 @@ class Resource
     @downloader = nil
   end
 
-  def mirrors; []; end
+  def detect_version(val)
+    case val
+    when nil    then Version.detect(url, specs)
+    when String then Version.new(val)
+    when Hash   then Version.new_with_scheme(*val.shift)
+    else
+      raise TypeError, "version '#{val.inspect}' should be a string"
+    end
+  end
 
-  def version
-    Version.detect(url, specs)
+  def version val=nil
+    @version ||= detect_version(val)
   end
 
   def download_strategy
@@ -43,7 +52,8 @@ class Resource
     @owner = owner
     # download_strategy wants the following from its second argument:
     # url, version, mirrors, specs
-    @downloader = download_strategy.new("#{owner}--#{name}", self)
+    download_name = name == 'main' ? owner.name : "#{owner.name}--#{name}"
+    @downloader = download_strategy.new(download_name, self)
   end
 
   # Download the resource
@@ -103,5 +113,9 @@ class Resource
     @url = val
     @using = specs.delete(:using)
     @specs.merge!(specs)
+  end
+
+  def mirror val
+    mirrors << val
   end
 end

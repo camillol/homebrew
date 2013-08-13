@@ -48,7 +48,6 @@ class Formula
 
     @active_spec = determine_active_spec
     validate_attributes :url, :name, :version
-    @downloader = download_strategy.new(name, active_spec)
 
     # Combine DSL `option` and `def options`
     options.each do |opt, desc|
@@ -59,9 +58,12 @@ class Formula
     @pin = FormulaPin.new(self)
 
     @resources = self.class.resources
+    @resources.merge! active_spec.resources
     @resources.each_value do |r|
-      r.set_owner name
+      r.set_owner self
     end
+
+    @downloader = @resources['main'].downloader
   end
 
   def set_spec(name)
@@ -182,7 +184,7 @@ class Formula
   end
 
   def download_strategy
-    active_spec.download_strategy
+    @resources['main'].download_strategy
   end
 
   def cached_download
@@ -520,7 +522,7 @@ class Formula
 
   # For FormulaInstaller.
   def verify_download_integrity fn
-    active_spec.verify_download_integrity(fn)
+    @resources['main'].verify_download_integrity(fn)
   end
 
   def test
@@ -711,6 +713,7 @@ class Formula
 
     # Define a named resource using a SoftwareSpec style block
     def resource res_name, &block
+      raise ResourceNameReservedError.new(res_name) if res_name == 'main'
       raise DuplicateResourceError.new(res_name) if resources.has_key?(res_name)
       res = Resource.new(res_name)
       res.instance_eval(&block)
